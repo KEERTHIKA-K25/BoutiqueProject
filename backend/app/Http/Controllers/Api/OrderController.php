@@ -1,40 +1,36 @@
 <?php
-
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-
-use App\Models\Order;
-use App\Models\Product;
 use Illuminate\Support\Facades\Log;
+use App\Services\OrderService;
+use App\Services\ShiprocketService;
 
 class OrderController extends Controller
 {
+    public function __construct(private
+        OrderService $orderService, private
+        ShiprocketService $shiprocketService
+        )
+    {
+    }
+
     public function store(Request $request)
     {
         $request->validate([
             'product_id' => 'required|exists:products,id'
         ]);
 
-        $product = Product::findOrFail($request->product_id);
-
-        $order = Order::create([
-            'user_id' => $request->user()->id,
-            'total_amount' => $product->price,
-            'status' => 'pending'
-        ]);
+        $order = $this->orderService->createPendingOrder(
+            $request->user()->id,
+            $request->product_id
+        );
 
         try {
-            // Trigger Shiprocket Integration Internally
-            $shiprocketController = new ShiprocketController();
-            $shipmentRequest = new Request(['order_id' => $order->id]);
-            $shipmentResponse = $shiprocketController->createShipment($shipmentRequest);
+            // Trigger Shiprocket Integration Internally via Service Layer
+            $shipmentData = $this->shiprocketService->createAdhocShipment($order);
 
-            $responseData = json_decode($shipmentResponse->getContent());
-
-            // Notification service has been triggered later once Admin ships it 
-            // but for mission requirements, let's keep simulating it.
             $order = $order->fresh();
 
             // Trigger Notification (Mock WhatsApp/SMS)
@@ -43,7 +39,7 @@ class OrderController extends Controller
 
             return response()->json([
                 'message' => 'Order placed successfully!',
-                'shiprocket_order_id' => $responseData->shiprocket_order_id ?? null,
+                'shiprocket_order_id' => $shipmentData['shiprocket_order_id'] ?? null,
                 'order' => $order
             ], 201);
         }
@@ -59,10 +55,7 @@ class OrderController extends Controller
 
     public function userOrders(Request $request)
     {
-        // Return orders for authenticated user
-        $orders = Order::where('user_id', $request->user()->id)
-            ->orderBy('created_at', 'desc')
-            ->get();
+        $orders = $this->orderService->getUserOrders($request->user()->id);
 
         return response()->json($orders);
     }

@@ -1,36 +1,28 @@
 <?php
-
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Log;
 use App\Models\User;
+use App\Services\AuthService;
 
 class AuthController extends Controller
 {
+    public function __construct(private AuthService $authService)
+    {
+    }
+
     public function register(Request $request)
     {
-        $request->validate([
+        $validatedData = $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
             'phone' => 'required|string|max:20',
             'password' => 'required|string|min:8|confirmed',
         ]);
 
-        $otpCode = rand(100000, 999999);
-
-        $user = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'phone' => $request->phone,
-            'password' => Hash::make($request->password),
-            'otp' => $otpCode,
-        ]);
-
-        Log::info("[OTP] To: {$user->phone} - Your Boutique verification code is: {$otpCode}");
+        $user = $this->authService->createUserWithOtp($validatedData);
 
         $token = $user->createToken('auth_token')->plainTextToken;
 
@@ -82,11 +74,7 @@ class AuthController extends Controller
 
         $user = $request->user();
 
-        if ($user->otp === $request->otp) {
-            $user->otp_verified_at = now();
-            $user->otp = null;
-            $user->save();
-
+        if ($this->authService->verifyUserOtp($user, $request->otp)) {
             return response()->json(['message' => 'OTP Verified Successfully']);
         }
 
