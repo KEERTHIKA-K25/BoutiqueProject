@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\ShiprocketController;
 
 Route::post('/register', [AuthController::class , 'register']);
 Route::post('/login', [AuthController::class , 'login']);
+Route::post('/admin/login', [AuthController::class , 'adminLogin']);
 
 use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\OrderController;
@@ -40,4 +41,6 @@ Route::middleware('auth:sanctum')->group(function () {
         // Admin
         Route::get('/admin/orders', [AdminController::class , 'index']);
         Route::post('/admin/orders/{id}/awb', [AdminController::class , 'updateAwb']);
+        Route::put('/admin/orders/{id}/status', [AdminController::class , 'updateStatus']);
+        Route::post('/admin/products', [AdminController::class , 'storeProduct']);
     });

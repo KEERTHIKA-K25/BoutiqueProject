@@ -14,11 +14,23 @@ export class AuthService {
         return this.http.post(`${this.apiUrl}/login`, credentials);
     }
 
+    adminLogin(credentials: any): Observable<any> {
+        return this.http.post(`${this.apiUrl}/admin/login`, credentials);
+    }
+
+    isAdmin(): boolean {
+        if (typeof window === 'undefined') return false;
+        return localStorage.getItem('is_admin') === 'true';
+    }
+
     register(userData: any): Observable<any> {
         return this.http.post(`${this.apiUrl}/register`, userData);
     }
 
     logout(): Observable<any> {
+        if (typeof window !== 'undefined') {
+            localStorage.removeItem('is_admin');
+        }
         return this.http.post(`${this.apiUrl}/logout`, {});
     }
 

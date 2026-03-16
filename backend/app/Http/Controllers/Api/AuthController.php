@@ -57,6 +57,36 @@ class AuthController extends Controller
         ]);
     }
 
+    public function adminLogin(Request $request)
+    {
+        $request->validate([
+            'email' => 'required|string|email',
+            'password' => 'required|string',
+        ]);
+
+        $user = User::where('email', $request->email)->first();
+
+        if (!$user || !Hash::check($request->password, $user->password)) {
+            return response()->json([
+                'message' => 'Invalid login details'
+            ], 401);
+        }
+
+        if (!$user->is_admin) {
+            return response()->json([
+                'message' => 'Unauthorized access'
+            ], 403);
+        }
+
+        $token = $user->createToken('admin_token')->plainTextToken;
+
+        return response()->json([
+            'access_token' => $token,
+            'token_type' => 'Bearer',
+            'is_admin' => true
+        ]);
+    }
+
     public function logout(Request $request)
     {
         $request->user()->tokens()->delete();
