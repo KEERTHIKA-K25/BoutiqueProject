@@ -1,7 +1,8 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { OrderService } from '../services/order.service';
+import { AuthService } from '../services/auth.service';
 
 @Component({
   selector: 'app-my-orders',
@@ -12,8 +13,7 @@ import { OrderService } from '../services/order.service';
       <div style="border-top: 5px solid #C9A86A; background: var(--glass-bg); display: flex; justify-content: space-between; align-items: center; padding: 25px 40px; margin: 0 -40px 0 -40px; border-bottom: 1px solid #EBEBEB;">
         <div style="flex: 1; display: flex; gap: 25px;">
           <a style="color: var(--text-color); font-size: 13px; font-weight: 500; cursor: pointer; text-decoration: none;" routerLink="/dashboard">Shop</a>
-          <a style="color: var(--text-color); font-size: 13px; font-weight: 500; cursor: pointer; text-decoration: none;">New Arrivals</a>
-          <a style="color: var(--text-color); font-size: 13px; font-weight: 500; cursor: pointer; text-decoration: none;">Sale</a>
+          <a style="color: var(--text-color); font-size: 13px; font-weight: 500; cursor: pointer; text-decoration: none;" routerLink="/new-arrivals">New Arrivals</a>
         </div>
         
         <div style="flex: 1; text-align: center;">
@@ -22,9 +22,8 @@ import { OrderService } from '../services/order.service';
         </div>
         
         <div style="flex: 1; display: flex; justify-content: flex-end; gap: 20px;">
-          <a style="color: var(--text-color); font-size: 13px; font-weight: 500; cursor: pointer; text-decoration: none;">Search</a>
-          <a style="color: var(--text-color); font-size: 13px; font-weight: 500; cursor: pointer; text-decoration: none;" routerLink="/admin/orders">Admin</a>
           <a style="color: var(--text-color); font-size: 13px; font-weight: 500; cursor: pointer; text-decoration: none;" routerLink="/my-orders">Account</a>
+          <a style="color: var(--text-color); font-size: 13px; font-weight: 500; cursor: pointer; text-decoration: none;" (click)="logout()">Sign Out</a>
         </div>
       </div>
 
@@ -44,37 +43,53 @@ import { OrderService } from '../services/order.service';
             </tr>
           </thead>
           <tbody>
-            <tr *ngFor="let order of orders" style="border-bottom: 1px solid #F0F0F0;">
-              <td style="padding: 15px; font-weight: 500; font-size: 13px; color: var(--secondary-color);">#{{ order.id }}</td>
-              <td style="padding: 15px; font-size: 13px;">{{ order.created_at | date:'mediumDate' }}</td>
-              <td style="padding: 15px; font-size: 13px; font-weight: 500;">₹{{ order.total_amount }}</td>
-              <td style="padding: 15px; font-size: 13px;">{{ order.status | titlecase }}</td>
-              <td style="padding: 15px;">
-                <div style="display: flex; flex-direction: column; gap: 10px; align-items: flex-start;">
-                    <button *ngIf="order.awb_code" class="btn-primary" style="padding: 6px 12px; font-size: 10px; width: auto;" (click)="trackOrder(order)">
-                      {{ trackingOrder === order.id ? 'LOADING...' : 'VIEW ORDER' }}
-                    </button>
-                    <button *ngIf="!order.awb_code && order.tracking_id" class="btn-primary" style="padding: 6px 12px; font-size: 10px; width: auto; background-color: #A0A0A0;" disabled>
-                      PROCESSING
-                    </button>
+            <ng-container *ngFor="let order of orders">
+              <tr style="transition: background-color 0.3s ease;" [style.border-bottom]="trackingActivities[order.id] ? 'none' : '1px solid #F0F0F0'" [style.background-color]="trackingActivities[order.id] ? '#fcfcfc' : 'transparent'">
+                <td style="padding: 15px; font-weight: 500; font-size: 13px; color: var(--secondary-color);">#{{ order.id }}</td>
+                <td style="padding: 15px; font-size: 13px;">{{ order.created_at | date:'mediumDate' }}</td>
+                <td style="padding: 15px; font-size: 13px; font-weight: 500;">₹{{ order.total_amount }}</td>
+                <td style="padding: 15px; font-size: 13px;">{{ order.status | titlecase }}</td>
+                <td style="padding: 15px; position: relative;">
+                  <div style="display: flex; flex-direction: column; gap: 10px; align-items: flex-start;">
+                      <button *ngIf="order.awb_code" class="btn-primary" style="padding: 6px 12px; font-size: 10px; width: auto; transition: background-color 0.3s;" 
+                              [style.background-color]="trackingActivities[order.id] ? '#666' : ''"
+                              (click)="trackOrder(order)">
+                        {{ trackingOrder === order.id ? 'LOADING...' : (trackingActivities[order.id] ? 'CLOSE DETAILS' : 'SEE UPDATES') }}
+                      </button>
+                      <button *ngIf="!order.awb_code && order.tracking_id" class="btn-primary" style="padding: 6px 12px; font-size: 10px; width: auto; background-color: #A0A0A0;" disabled>
+                        PROCESSING
+                      </button>
+                  </div>
+                  
+                  <!-- Floating Overlay Card -->
+                  <div class="tracking-overlay-card" *ngIf="trackingActivities[order.id]">
+                    <!-- Close 'X' Button -->
+                    <button class="close-btn" (click)="trackOrder(order)">&times;</button>
 
-                    <div class="timeline-container fade-in" *ngIf="trackingActivities[order.id]" style="margin-top: 10px;">
-                      <div *ngIf="trackingActivities[order.id].length === 0" style="font-size: 11px; color: #999;">
+                    <!-- Centered Timeline -->
+                    <div style="width: 100%;">
+                      <h4 style="font-family: 'Playfair Display', serif; font-size: 16px; margin: 0 0 20px 0; color: #153A36; letter-spacing: 0.5px; border-bottom: 1px solid rgba(0,0,0,0.05); padding-bottom: 12px; text-align: center;">Order Journey</h4>
+                      
+                      <div *ngIf="trackingActivities[order.id].length === 0" style="font-size: 13px; color: #999; font-style: italic; text-align: center;">
                         Awaiting courier intercept...
                       </div>
                       
-                      <div *ngFor="let activity of trackingActivities[order.id]; let i = index" style="margin-bottom: 5px;">
-                          <div [style.color]="i === 0 ? 'var(--primary-color)' : '#666'" style="font-size: 12px; font-weight: 500;">
-                            {{ activity.activity }}
-                          </div>
-                          <div style="font-size: 10px; color: #888;">
-                             {{ activity.location }} - {{ activity.date | date:'dd MMM, h:mm a' }}
-                          </div>
+                      <div class="tracking-timeline" *ngIf="trackingActivities[order.id].length > 0" style="margin: 15px auto 0 auto; max-width: 300px;">
+                        <!-- The [class.active]="i === 0" guarantees only the top node pulses -->
+                        <div class="tracking-node" *ngFor="let activity of trackingActivities[order.id]; let i = index" [class.active]="i === 0">
+                            <div [style.color]="i === 0 ? '#153A36' : '#555'" style="font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 600; margin-bottom: 2px;">
+                              {{ activity.activity }}
+                            </div>
+                            <div style="font-family: 'Inter', sans-serif; font-size: 11px; color: #888;">
+                                {{ activity.location }} <br/> {{ activity.date | date:'dd MMM, h:mm a' }}
+                            </div>
+                        </div>
                       </div>
                     </div>
-                </div>
-              </td>
-            </tr>
+                  </div>
+                </td>
+              </tr>
+            </ng-container>
           </tbody>
         </table>
       </div>
@@ -89,10 +104,98 @@ import { OrderService } from '../services/order.service';
         </div>
       </ng-template>
     </div>
-  `
+  `,
+  styles: [`
+    /* The Absolute Floating Overlay Card */
+    .tracking-overlay-card {
+        position: absolute;
+        top: 100%; /* Spawns exactly at the bottom border of the Action cell */
+        right: 0px; /* Aligns to the right edge of the cell */
+        z-index: 1000; /* Forces it to hover over all other rows */
+        
+        width: 380px;
+        background: rgba(255, 255, 255, 0.85); 
+        backdrop-filter: blur(10px); /* The aggressive 10px Glassmorphism blur */
+        -webkit-backdrop-filter: blur(10px);
+        
+        padding: 35px 30px;
+        border-radius: 8px;
+        border: 1px solid rgba(21, 58, 54, 0.1); 
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15); /* Slightly boosted shadow for Z-depth */
+        
+        /* A snappy, modern origin animation from the button */
+        animation: dropIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        transform-origin: top right; 
+    }
+
+    .close-btn {
+        position: absolute;
+        top: 15px;
+        right: 15px;
+        background: none;
+        border: none;
+        font-size: 24px;
+        color: #888;
+        cursor: pointer;
+        padding: 0;
+        line-height: 1;
+        transition: color 0.2s;
+    }
+
+    .close-btn:hover {
+        color: #153A36;
+    }
+
+    @keyframes dropIn {
+        0% { opacity: 0; transform: translateY(-10px) scale(0.95); }
+        100% { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    /* The Vertical Track Line */
+    .tracking-timeline {
+        position: relative;
+        padding-left: 0;
+        margin-left: 10px;
+        margin-top: 15px;
+        border-left: 2px solid #EBEBEB; 
+    }
+
+    /* Individual Status Node */
+    .tracking-node {
+        position: relative;
+        margin-bottom: 25px;
+        padding-left: 25px;
+    }
+
+    /* The Solid Teal Circle */
+    .tracking-node::before {
+        content: '';
+        position: absolute;
+        left: -8px; /* Centers perfectly on the 2px border */
+        top: 3px;
+        width: 14px;
+        height: 14px;
+        border-radius: 50%;
+        background-color: #153A36; /* Transformative Teal */
+        border: 2px solid white;
+        box-sizing: border-box;
+    }
+
+    /* The Pulse Routine for the Latest Status */
+    .tracking-node.active::before {
+        animation: pulse-ring 1.5s infinite cubic-bezier(0.25, 0.8, 0.25, 1);
+    }
+
+    @keyframes pulse-ring {
+        0% { box-shadow: 0 0 0 0 rgba(21, 58, 54, 0.5); }
+        70% { box-shadow: 0 0 0 8px rgba(21, 58, 54, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(21, 58, 54, 0); }
+    }
+  `]
 })
 export class MyOrdersComponent implements OnInit {
   private orderService = inject(OrderService);
+  private authService = inject(AuthService);
+  private router = inject(Router);
 
   orders: any[] = [];
 
@@ -141,6 +244,13 @@ export class MyOrdersComponent implements OnInit {
         this.trackingOrder = null;
         alert('Failed to fetch tracking details from Shiprocket.');
       }
+    });
+  }
+
+  logout() {
+    this.authService.logout().subscribe({
+      next: () => this.router.navigate(['/login']),
+      error: () => this.router.navigate(['/login'])
     });
   }
 }

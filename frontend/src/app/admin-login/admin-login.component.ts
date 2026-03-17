@@ -64,7 +64,7 @@ export class AdminLoginComponent {
         this.authService.adminLogin(this.credentials).subscribe({
             next: (res) => {
                 if (typeof window !== 'undefined') {
-                    localStorage.setItem('auth_token', res.access_token);
+                    localStorage.setItem('admin_auth_token', res.access_token);
                     localStorage.setItem('is_admin', res.is_admin ? 'true' : 'false');
                 }
                 this.router.navigate(['/admin/dashboard']);

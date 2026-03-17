@@ -66,7 +66,7 @@ export class LoginComponent {
 
       this.authService.login(this.loginForm.value).subscribe({
         next: (response) => {
-          localStorage.setItem('auth_token', response.access_token);
+          localStorage.setItem('user_auth_token', response.access_token);
           if (response.otp_verified === false) {
             this.router.navigate(['/verify-otp']);
           } else {

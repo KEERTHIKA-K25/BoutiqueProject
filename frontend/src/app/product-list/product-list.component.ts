@@ -20,8 +20,8 @@ import { OrderService } from '../services/order.service';
             <p class="product-description">{{ product.description }}</p>
             <div class="product-price">₹{{ product.price }}</div>
             
-            <button class="btn-primary" (click)="buyNow(product.id)" [disabled]="isSubmitting">
-              {{ isSubmitting && currentProductId === product.id ? 'PROCESSING...' : 'BUY NOW' }}
+            <button class="btn-primary" (click)="buyNow(product.id)" [disabled]="processingProducts[product.id]">
+              {{ processingProducts[product.id] ? 'PROCESSING...' : 'BUY NOW' }}
             </button>
           </div>
         </div>
@@ -60,8 +60,7 @@ export class ProductListComponent implements OnInit {
 
   products: Product[] = [];
   isLoading = true;
-  isSubmitting = false;
-  currentProductId: number | null = null;
+  processingProducts: { [id: number]: boolean } = {};
 
   successMessage = '';
   toastVisible = false;
@@ -93,18 +92,15 @@ export class ProductListComponent implements OnInit {
   }
 
   buyNow(productId: number) {
-    this.isSubmitting = true;
-    this.currentProductId = productId;
+    this.processingProducts[productId] = true;
 
     this.orderService.placeOrder(productId).subscribe({
       next: (response) => {
-        this.isSubmitting = false;
-        this.currentProductId = null;
+        this.processingProducts[productId] = false;
         this.showToast(`✨ Order Successfully Created! Tracking will be available once dispatched by Admin.`);
       },
       error: (err) => {
-        this.isSubmitting = false;
-        this.currentProductId = null;
+        this.processingProducts[productId] = false;
         alert('Failed to place order.');
       }
     });

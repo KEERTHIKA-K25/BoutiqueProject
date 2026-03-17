@@ -98,7 +98,7 @@ export class RegisterComponent {
 
       this.authService.register(this.registerForm.value).subscribe({
         next: (response) => {
-          localStorage.setItem('auth_token', response.access_token);
+          localStorage.setItem('user_auth_token', response.access_token);
           this.router.navigate(['/verify-otp']);
         },
         error: (err) => {

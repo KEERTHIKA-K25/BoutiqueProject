@@ -236,7 +236,7 @@ export class AdminDashboardComponent implements OnInit {
     }
 
     fetchOrders() {
-        const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
+        const token = typeof window !== 'undefined' ? localStorage.getItem('admin_auth_token') : null;
         let headers = new HttpHeaders();
         if (token) headers = headers.set('Authorization', `Bearer ${token}`);
 
@@ -253,7 +253,7 @@ export class AdminDashboardComponent implements OnInit {
     }
 
     saveStatus(order: any) {
-        const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
+        const token = typeof window !== 'undefined' ? localStorage.getItem('admin_auth_token') : null;
         let headers = new HttpHeaders();
         if (token) headers = headers.set('Authorization', `Bearer ${token}`);
 
@@ -273,7 +273,7 @@ export class AdminDashboardComponent implements OnInit {
         if (!code) return;
 
         order.syncing = true;
-        const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
+        const token = typeof window !== 'undefined' ? localStorage.getItem('admin_auth_token') : null;
         let headers = new HttpHeaders();
         if (token) headers = headers.set('Authorization', `Bearer ${token}`);
 
@@ -294,7 +294,7 @@ export class AdminDashboardComponent implements OnInit {
     }
 
     logout() {
-        this.authService.logout().subscribe({
+        this.authService.adminLogout().subscribe({
             next: () => this.router.navigate(['/admin/login']),
             error: () => this.router.navigate(['/admin/login'])
         });
@@ -311,7 +311,7 @@ export class AdminDashboardComponent implements OnInit {
 
     saveProduct() {
         this.isSavingProduct = true;
-        const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
+        const token = typeof window !== 'undefined' ? localStorage.getItem('admin_auth_token') : null;
         let headers = new HttpHeaders();
         if (token) headers = headers.set('Authorization', `Bearer ${token}`);
 

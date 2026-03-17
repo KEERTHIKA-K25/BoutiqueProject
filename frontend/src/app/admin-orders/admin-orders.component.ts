@@ -116,7 +116,7 @@ export class AdminOrdersComponent implements OnInit {
   }
 
   fetchOrders() {
-    const token = localStorage.getItem('auth_token');
+    const token = localStorage.getItem('admin_auth_token');
     const headers = new HttpHeaders().set('Authorization', `Bearer ${token}`);
 
     this.http.get<any[]>(`${environment.apiUrl}/admin/orders`, { headers }).subscribe(res => {
@@ -125,7 +125,7 @@ export class AdminOrdersComponent implements OnInit {
   }
 
   saveAwb(order: any) {
-    const token = localStorage.getItem('auth_token');
+    const token = localStorage.getItem('admin_auth_token');
     const headers = new HttpHeaders().set('Authorization', `Bearer ${token}`);
 
     this.http.post(`${environment.apiUrl}/admin/orders/${order.id}/awb`, { awb_code: order.new_awb }, { headers })

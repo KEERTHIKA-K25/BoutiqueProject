@@ -20,7 +20,7 @@ export class ProductService {
   private apiUrl = environment.apiUrl;
 
   getProducts(): Observable<Product[]> {
-    const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
+    const token = typeof window !== 'undefined' ? localStorage.getItem('user_auth_token') : null;
     let headers = new HttpHeaders();
     if (token) {
       headers = headers.set('Authorization', `Bearer ${token}`);

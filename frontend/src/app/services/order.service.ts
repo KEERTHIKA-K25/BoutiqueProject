@@ -11,7 +11,7 @@ export class OrderService {
   private apiUrl = environment.apiUrl;
 
   placeOrder(productId: number): Observable<any> {
-    const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
+    const token = typeof window !== 'undefined' ? localStorage.getItem('user_auth_token') : null;
     let headers = new HttpHeaders();
     if (token) {
       headers = headers.set('Authorization', `Bearer ${token}`);
@@ -20,7 +20,7 @@ export class OrderService {
   }
 
   getUserOrders(): Observable<any[]> {
-    const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
+    const token = typeof window !== 'undefined' ? localStorage.getItem('user_auth_token') : null;
     let headers = new HttpHeaders();
     if (token) {
       headers = headers.set('Authorization', `Bearer ${token}`);
@@ -29,7 +29,7 @@ export class OrderService {
   }
 
   trackOrder(trackingId: string): Observable<any> {
-    const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
+    const token = typeof window !== 'undefined' ? localStorage.getItem('user_auth_token') : null;
     let headers = new HttpHeaders();
     if (token) {
       headers = headers.set('Authorization', `Bearer ${token}`);
