@@ -11,7 +11,7 @@ import { RouterLink } from '@angular/router';
   imports: [ProductListComponent, RouterLink, FormsModule],
   template: `
     <div class="dashboard-container fade-in" style="padding-top: 0;">
-      <div style="border-top: 5px solid #C9A86A; background: var(--glass-bg); display: flex; justify-content: space-between; align-items: center; padding: 25px 40px; margin: 0 -40px 0 -40px; border-bottom: 1px solid #EBEBEB;">
+      <div style="border-top: 5px solid #C9A86A; background: var(--glass-bg); display: flex; justify-content: space-between; align-items: center; padding: 20px 50px; border-bottom: 1px solid #EBEBEB;">
         <div style="flex: 1; display: flex; align-items: center; gap: 25px;">
           <a style="color: var(--text-color); font-size: 13px; font-weight: 500; cursor: pointer; text-decoration: none;" routerLink="/dashboard">Shop</a>
           <a style="color: var(--text-color); font-size: 13px; font-weight: 500; cursor: pointer; text-decoration: none;" routerLink="/new-arrivals">New Arrivals</a>
@@ -24,19 +24,26 @@ import { RouterLink } from '@angular/router';
         
         <div style="flex: 1; display: flex; justify-content: flex-end; align-items: center; gap: 20px;">
           <input type="text" placeholder="Search..." [(ngModel)]="searchTerm" style="border: none; border-bottom: 1px solid #ccc; padding: 4px 6px; font-family: 'Montserrat', sans-serif; font-size: 12px; outline: none; background: transparent; width: 140px; color: var(--text-color); transition: border-color 0.3s;" onfocus="this.style.borderBottomColor='var(--primary-color)'" onblur="this.style.borderBottomColor='#ccc'">
-          <a style="color: var(--text-color); font-size: 13px; font-weight: 500; cursor: pointer; text-decoration: none;" routerLink="/my-orders">Account</a>
-          <a style="color: var(--text-color); font-size: 13px; font-weight: 500; cursor: pointer; text-decoration: none;" (click)="logout()">Sign Out</a>
+          
+          @if (isLoggedIn) {
+            <a style="color: var(--text-color); font-size: 13px; font-weight: 500; cursor: pointer; text-decoration: none;" routerLink="/my-orders">Account</a>
+            <a style="color: var(--text-color); font-size: 13px; font-weight: 500; cursor: pointer; text-decoration: none;" (click)="logout()">Sign Out</a>
+          } @else {
+            <a style="color: var(--text-color); font-size: 13px; font-weight: 500; cursor: pointer; text-decoration: none;" routerLink="/login">Login</a>
+            <span style="color: #ccc;">|</span>
+            <a style="color: var(--text-color); font-size: 13px; font-weight: 500; cursor: pointer; text-decoration: none;" routerLink="/register">Register</a>
+          }
         </div>
       </div>
 
-      <div style="background-color: var(--accent-color); padding: 80px 40px; margin: 0 -40px 40px -40px; text-align: left;">
-        <div style="max-width: 500px; padding-left: 10%;">
-          <h2 style="font-family: 'Playfair Display', serif; font-size: 46px; font-weight: 400; color: var(--secondary-color); margin-top: 0; line-height: 1.2;">ELEGANT AUTUMN<br/>ARRIVALS</h2>
-          <button class="btn-primary" style="width: auto; padding: 14px 30px; margin-top: 15px;" (click)="scrollToCollection()">SHOP THE COLLECTION</button>
+      <div style="background-color: var(--accent-color); width: 100vw; padding: 100px 0; margin-bottom: 50px; text-align: left; box-sizing: border-box;">
+        <div style="margin-left: 10%; max-width: 600px;">
+          <h2 style="font-family: 'Playfair Display', serif; font-size: 52px; font-weight: 400; color: var(--secondary-color); margin-top: 0; line-height: 1.1;">ELEGANT AUTUMN<br/>ARRIVALS</h2>
+          <button class="btn-primary" style="width: auto; padding: 14px 30px; margin-top: 25px;" (click)="scrollToCollection()">SHOP THE COLLECTION</button>
         </div>
       </div>
 
-      <div id="collection-grid">
+      <div id="collection-grid" style="width: 90%; margin: 0 auto; padding-bottom: 60px;">
         <app-product-list [searchTerm]="searchTerm"></app-product-list>
       </div>
     </div>
@@ -47,6 +54,10 @@ export class DashboardComponent {
   private router = inject(Router);
 
   searchTerm = '';
+
+  get isLoggedIn(): boolean {
+    return this.authService.isLoggedIn();
+  }
 
   scrollToCollection() {
     document.getElementById('collection-grid')?.scrollIntoView({ behavior: 'smooth' });

@@ -2,6 +2,8 @@ import { Component, OnInit, inject, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ProductService, Product } from '../services/product.service';
 import { OrderService } from '../services/order.service';
+import { AuthService } from '../services/auth.service';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-product-list',
@@ -55,6 +57,8 @@ import { OrderService } from '../services/order.service';
 export class ProductListComponent implements OnInit {
   private productService = inject(ProductService);
   private orderService = inject(OrderService);
+  private authService = inject(AuthService);
+  private router = inject(Router);
 
   @Input() searchTerm: string = '';
 
@@ -92,6 +96,11 @@ export class ProductListComponent implements OnInit {
   }
 
   buyNow(productId: number) {
+    if (!this.authService.isLoggedIn()) {
+      this.router.navigate(['/login']);
+      return;
+    }
+
     this.processingProducts[productId] = true;
 
     this.orderService.placeOrder(productId).subscribe({

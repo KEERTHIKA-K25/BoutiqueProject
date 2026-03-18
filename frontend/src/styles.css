@@ -162,9 +162,12 @@ a:hover {
 }
 
 .dashboard-container {
-  padding: 40px;
-  max-width: 1200px;
-  margin: 0 auto;
+  width: 100%;
+  max-width: none;
+  padding: 0;
+  margin: 0;
+  box-sizing: border-box;
+  overflow-x: hidden;
 }
 
 .product-grid {

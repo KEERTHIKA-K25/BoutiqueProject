@@ -23,6 +23,11 @@ export class AuthService {
         return localStorage.getItem('is_admin') === 'true' && !!localStorage.getItem('admin_auth_token');
     }
 
+    isLoggedIn(): boolean {
+        if (typeof window === 'undefined') return false;
+        return !!localStorage.getItem('user_auth_token');
+    }
+
     register(userData: any): Observable<any> {
         return this.http.post(`${this.apiUrl}/register`, userData);
     }

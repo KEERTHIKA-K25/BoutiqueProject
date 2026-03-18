@@ -10,7 +10,7 @@ import { AuthService } from '../services/auth.service';
   imports: [CommonModule, RouterLink],
   template: `
     <div class="dashboard-container fade-in" style="padding-top: 0;">
-      <div style="border-top: 5px solid #C9A86A; background: var(--glass-bg); display: flex; justify-content: space-between; align-items: center; padding: 25px 40px; margin: 0 -40px 0 -40px; border-bottom: 1px solid #EBEBEB;">
+      <div style="border-top: 5px solid #C9A86A; background: var(--glass-bg); display: flex; justify-content: space-between; align-items: center; padding: 20px 50px; border-bottom: 1px solid #EBEBEB;">
         <div style="flex: 1; display: flex; gap: 25px;">
           <a style="color: var(--text-color); font-size: 13px; font-weight: 500; cursor: pointer; text-decoration: none;" routerLink="/dashboard">Shop</a>
           <a style="color: var(--text-color); font-size: 13px; font-weight: 500; cursor: pointer; text-decoration: none;" routerLink="/new-arrivals">New Arrivals</a>
@@ -27,11 +27,12 @@ import { AuthService } from '../services/auth.service';
         </div>
       </div>
 
-      <div style="background-color: var(--accent-color); padding: 50px 40px; margin: 0 -40px 40px -40px; text-align: center;">
-        <h2 style="font-family: 'Montserrat', sans-serif; font-size: 32px; font-weight: 400; color: var(--secondary-color); margin: 0; letter-spacing: 0.1em; text-transform: uppercase;">MY ORDERS</h2>
-      </div>
+      <div style="padding: 40px 8% 80px 8%;">
+        <div style="text-align: left; margin-bottom: 30px;">
+          <h2 style="font-family: 'Montserrat', sans-serif; font-size: 32px; font-weight: 400; color: var(--secondary-color); margin: 0; letter-spacing: 0.1em; text-transform: uppercase;">MY ORDERS</h2>
+        </div>
 
-      <div class="table-card" style="box-shadow: none; border: 1px solid #EBEBEB; padding: 10px; border-radius: 0;">
+        <div class="table-card" style="width: 100%; max-width: 1100px; margin: 0 auto; box-shadow: none; border: 1px solid #EBEBEB; padding: 10px; border-radius: 0;">
         <table class="premium-table" *ngIf="orders.length > 0; else noOrders" style="width: 100%; border-collapse: collapse; text-align: left;">
           <thead>
             <tr style="border-bottom: 2px solid #EBEBEB;">
@@ -103,6 +104,7 @@ import { AuthService } from '../services/auth.service';
           </button>
         </div>
       </ng-template>
+      </div>
     </div>
   `,
   styles: [`

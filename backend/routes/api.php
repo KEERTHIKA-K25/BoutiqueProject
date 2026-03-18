@@ -16,6 +16,8 @@ use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\AdminController;
 
+Route::get('/products', [ProductController::class, 'index']);
+
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/user', function (Request $request) {
             return $request->user();
@@ -29,7 +31,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/shipments/track/{tracking_id}', [ShiprocketController::class , 'getTrackingDetails']);
 
         // Products
-        Route::get('/products', [ProductController::class , 'index']);
+        // Product fetch is public
 
         // Orders
         Route::post('/orders', [OrderController::class , 'store']);
