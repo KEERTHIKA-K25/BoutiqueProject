@@ -36,6 +36,7 @@ Route::middleware('auth:sanctum')->group(function () {
         // Orders
         Route::post('/orders', [OrderController::class , 'store']);
         Route::get('/orders', [OrderController::class , 'userOrders']);
+        Route::post('/orders/{id}/return', [OrderController::class , 'returnOrder']);
 
         // OTP
         Route::post('/verify-otp', [AuthController::class , 'verifyOtp']);

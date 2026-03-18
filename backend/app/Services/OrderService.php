@@ -20,8 +20,13 @@ class OrderService
 
     public function getUserOrders(int $userId): Collection
     {
-        return Order::where('user_id', $userId)
+        return Order::with('returnOrder')->where('user_id', $userId)
             ->orderBy('created_at', 'desc')
-            ->get();
+            ->get()->map(function ($order) {
+                if ($order->returnOrder) {
+                    $order->shipment_id = $order->returnOrder->shipment_id;
+                }
+                return $order;
+            });
     }
 }

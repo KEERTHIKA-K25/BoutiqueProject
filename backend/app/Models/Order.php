@@ -15,4 +15,9 @@ class Order extends Model
     {
         return $this->belongsTo(User::class);
     }
+
+    public function returnOrder()
+    {
+        return $this->hasOne(ReturnOrder::class);
+    }
 }

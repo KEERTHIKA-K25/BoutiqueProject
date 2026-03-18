@@ -36,4 +36,13 @@ export class OrderService {
     }
     return this.http.get<any>(`${this.apiUrl}/shipments/track/${trackingId}`, { headers });
   }
+
+  returnOrder(orderId: number, reason: string): Observable<any> {
+    const token = typeof window !== 'undefined' ? localStorage.getItem('user_auth_token') : null;
+    let headers = new HttpHeaders();
+    if (token) {
+      headers = headers.set('Authorization', `Bearer ${token}`);
+    }
+    return this.http.post(`${this.apiUrl}/orders/${orderId}/return`, { reason }, { headers });
+  }
 }

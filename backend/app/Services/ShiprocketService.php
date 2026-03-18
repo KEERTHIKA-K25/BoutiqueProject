@@ -95,4 +95,61 @@ class ShiprocketService
 
         return $activities;
     }
+
+    public function createReturnShipment(Order $order, array $pickupAddress, string $reason): array
+    {
+        $token = $this->authenticate();
+
+        $returnPayload = [
+            'order_id' => 'return_' . time() . '_' . $order->id,
+            'order_date' => now()->format('Y-m-d H:i'),
+            'channel_id' => '',
+            'pickup_customer_name' => $pickupAddress['pickup_customer_name'],
+            'pickup_last_name' => '',
+            'pickup_address' => $pickupAddress['pickup_address'],
+            'pickup_address_2' => '',
+            'pickup_city' => $pickupAddress['pickup_city'],
+            'pickup_state' => $pickupAddress['pickup_state'],
+            'pickup_country' => $pickupAddress['pickup_country'],
+            'pickup_pincode' => $pickupAddress['pickup_pincode'],
+            'pickup_email' => $order->user->email ?? 'noreply@return.com',
+            'pickup_phone' => $pickupAddress['pickup_phone'],
+            'shipping_customer_name' => 'Boutique Returns',
+            'shipping_last_name' => '',
+            'shipping_address' => '123 Boutique Main St',
+            'shipping_address_2' => '',
+            'shipping_city' => 'New Delhi',
+            'shipping_country' => 'India',
+            'shipping_pincode' => '110001',
+            'shipping_state' => 'Delhi',
+            'shipping_email' => 'returns@boutique.com',
+            'shipping_phone' => '9876543210',
+            'order_items' => [
+                [
+                    'name' => 'Return: Boutique Item',
+                    'sku' => 'RET-SKU-' . $order->product_id,
+                    'units' => 1,
+                    'selling_price' => $order->total_amount,
+                ]
+            ],
+            'payment_method' => 'Prepaid',
+            'total_discount' => '0',
+            'sub_total' => $order->total_amount,
+            'length' => 10,
+            'breadth' => 15,
+            'height' => 20,
+            'weight' => 0.5,
+            'qc_enable' => true,
+            'qc_reason' => $reason
+        ];
+
+        $createResponse = Http::withToken($token)->post('https://apiv2.shiprocket.in/v1/external/orders/create/return', $returnPayload);
+
+        if ($createResponse->failed()) {
+            Log::error('Shiprocket Return Create Failed: ' . $createResponse->body());
+            throw new \Exception('Shiprocket Return Create Failed');
+        }
+
+        return $createResponse->json();
+    }
 }

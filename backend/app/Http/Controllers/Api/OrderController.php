@@ -59,4 +59,48 @@ class OrderController extends Controller
 
         return response()->json($orders);
     }
+
+    public function returnOrder(Request $request, $id)
+    {
+        $request->validate([
+            'reason' => 'required|string',
+        ]);
+
+        $order = \App\Models\Order::where('id', $id)->where('user_id', $request->user()->id)->firstOrFail();
+
+        $mockUserAddress = [
+            'pickup_customer_name' => $request->user()->name,
+            'pickup_address'       => '123, Kumaran Street, Sembanarkoil',
+            'pickup_city'          => 'Mayiladuthurai',
+            'pickup_state'         => 'Tamil Nadu',
+            'pickup_country'       => 'India',
+            'pickup_pincode'       => '609309',
+            'pickup_phone'         => '9876543210',
+        ];
+
+        try {
+            $response = $this->shiprocketService->createReturnShipment($order, $mockUserAddress, $request->reason);
+
+            $returnOrder = \App\Models\ReturnOrder::create([
+                'order_id' => $order->id,
+                'shipment_id' => $response['shipment_id'] ?? 'Pending',
+                'reason' => $request->reason,
+                'status' => 'Pending'
+            ]);
+
+            $order->update([
+                'status' => 'Return Requested'
+            ]);
+
+            return response()->json([
+                'message' => 'Return requested successfully.',
+                'shipment_id' => $returnOrder->shipment_id
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'Failed to initiate return.',
+                'details' => $e->getMessage()
+            ], 500);
+        }
+    }
 }
