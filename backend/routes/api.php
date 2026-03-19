@@ -46,4 +46,6 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/admin/orders/{id}/awb', [AdminController::class , 'updateAwb']);
         Route::put('/admin/orders/{id}/status', [AdminController::class , 'updateStatus']);
         Route::post('/admin/products', [AdminController::class , 'storeProduct']);
+        Route::get('/admin/returns', [AdminController::class , 'getReturns']);
+        Route::patch('/admin/returns/{id}/process', [AdminController::class , 'processReturn']);
     });

@@ -12,5 +12,6 @@ export const routes: Routes = [
     { path: 'new-arrivals', loadComponent: () => import('./new-arrivals/new-arrivals.component').then(c => c.NewArrivalsComponent) },
     { path: 'admin/login', loadComponent: () => import('./admin-login/admin-login.component').then(c => c.AdminLoginComponent) },
     { path: 'admin/dashboard', loadComponent: () => import('./admin-dashboard/admin-dashboard.component').then(c => c.AdminDashboardComponent), canActivate: [adminGuard] },
-    { path: 'admin/orders', redirectTo: 'admin/dashboard' }
+    { path: 'admin/orders', redirectTo: 'admin/dashboard' },
+    { path: 'admin/returns', loadComponent: () => import('./admin-returns/admin-returns.component').then(c => c.AdminReturnsComponent), canActivate: [adminGuard] }
 ];

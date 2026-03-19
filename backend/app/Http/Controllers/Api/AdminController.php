@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 
 use App\Models\Order;
 use App\Models\Product;
+use App\Models\ReturnOrder;
 
 class AdminController extends Controller
 {
@@ -51,5 +52,31 @@ class AdminController extends Controller
         $product = Product::create($validatedData);
 
         return response()->json($product, 201);
+    }
+
+    public function getReturns(Request $request)
+    {
+        $returns = ReturnOrder::with(['order.user'])->orderBy('created_at', 'desc')->get();
+        return response()->json($returns);
+    }
+
+    public function processReturn(Request $request, $id)
+    {
+        $request->validate([
+            'action' => 'required|in:APPROVE,REJECT'
+        ]);
+
+        $returnOrder = ReturnOrder::with('order')->findOrFail($id);
+        $order = $returnOrder->order;
+
+        if ($request->action === 'APPROVE') {
+            $order->update(['status' => 'Returned & Refunded']);
+            $returnOrder->update(['status' => 'Completed']);
+            return response()->json(['message' => 'Return approved and order refunded.']);
+        } else {
+            $order->update(['status' => 'Delivered']);
+            $returnOrder->delete();
+            return response()->json(['message' => 'Return rejected and removed.']);
+        }
     }
 }

@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { environment } from '../../environments/environment';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
 import { AuthService } from '../services/auth.service';
 
 @Component({
@@ -23,6 +23,7 @@ import { AuthService } from '../services/auth.service';
         <nav style="display: flex; flex-direction: column; gap: 10px;">
           <a class="sidebar-link active">Dashboard</a>
           <a class="sidebar-link" (click)="scrollToOrders()">Manage Orders</a>
+          <a class="sidebar-link" (click)="goToReturns()">Return Orders</a>
           <a class="sidebar-link" (click)="showInventoryModal = true">Inventory</a>
         </nav>
 
@@ -230,9 +231,18 @@ export class AdminDashboardComponent implements OnInit {
     private http = inject(HttpClient);
     private authService = inject(AuthService);
     private router = inject(Router);
+    private route = inject(ActivatedRoute);
 
     ngOnInit() {
         this.fetchOrders();
+
+        this.route.queryParams.subscribe(params => {
+            if (params['tab'] === 'inventory') {
+                this.showInventoryModal = true;
+            } else if (params['tab'] === 'orders') {
+                setTimeout(() => this.scrollToOrders(), 100);
+            }
+        });
     }
 
     fetchOrders() {
@@ -244,6 +254,10 @@ export class AdminDashboardComponent implements OnInit {
             this.orders = res;
             this.calculateStats();
         });
+    }
+
+    goToReturns() {
+        this.router.navigate(['/admin/returns']);
     }
 
     calculateStats() {
