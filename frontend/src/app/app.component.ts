@@ -1,12 +1,14 @@
 import { Component } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
-import { ReactiveFormsModule } from '@angular/forms';
+import { ToastComponent } from './toast/toast.component';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet],
+  standalone: true,
+  imports: [RouterOutlet, ToastComponent],
   template: `
     <router-outlet />
+    <app-toast />
   `,
   styles: [],
 })

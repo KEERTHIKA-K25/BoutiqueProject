@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { ProductService, Product } from '../services/product.service';
 import { OrderService } from '../services/order.service';
 import { AuthService } from '../services/auth.service';
+import { ToastService } from '../services/toast.service';
 import { Router } from '@angular/router';
 
 @Component({
@@ -45,19 +46,14 @@ import { Router } from '@angular/router';
       </div>
     </ng-template>
 
-    <!-- Toast Notification -->
-    <div class="toast-notification" *ngIf="successMessage" [class.show]="toastVisible">
-      <div class="toast-content">
-        <h4>✨ Order Placed!</h4>
-        <p>{{ successMessage }}</p>
-      </div>
-    </div>
+    <!-- Toast removed: now rendered globally via app-toast -->
   `
 })
 export class ProductListComponent implements OnInit {
   private productService = inject(ProductService);
   private orderService = inject(OrderService);
   private authService = inject(AuthService);
+  private toastService = inject(ToastService);
   private router = inject(Router);
 
   @Input() searchTerm: string = '';
@@ -65,9 +61,6 @@ export class ProductListComponent implements OnInit {
   products: Product[] = [];
   isLoading = true;
   processingProducts: { [id: number]: boolean } = {};
-
-  successMessage = '';
-  toastVisible = false;
 
   get filteredProducts(): Product[] {
     if (!this.searchTerm) return this.products;
@@ -106,29 +99,12 @@ export class ProductListComponent implements OnInit {
     this.orderService.placeOrder(productId).subscribe({
       next: (response) => {
         this.processingProducts[productId] = false;
-        this.showToast(`✨ Order Successfully Created! Tracking will be available once dispatched by Admin.`);
+        this.toastService.show('✨ Order Successfully Created! Tracking will be available once dispatched by Admin.');
       },
       error: (err) => {
         this.processingProducts[productId] = false;
-        alert('Failed to place order.');
+        this.toastService.show('⚠️ Failed to place order. Please try again.');
       }
     });
-  }
-
-  showToast(message: string) {
-    this.successMessage = message;
-
-    // Slight delay to allow DOM to render before animating
-    setTimeout(() => {
-      this.toastVisible = true;
-    }, 10);
-
-    // Hide toast after 5 seconds
-    setTimeout(() => {
-      this.toastVisible = false;
-      setTimeout(() => {
-        this.successMessage = '';
-      }, 300); // 300px transition time
-    }, 5000);
   }
 }

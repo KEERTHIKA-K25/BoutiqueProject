@@ -4,6 +4,7 @@ import { Router, RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { OrderService } from '../services/order.service';
 import { AuthService } from '../services/auth.service';
+import { ToastService } from '../services/toast.service';
 
 @Component({
   selector: 'app-my-orders',
@@ -140,13 +141,7 @@ import { AuthService } from '../services/auth.service';
         </div>
       </div>
 
-      <!-- Toast Notification -->
-      <div class="toast-notification" *ngIf="toastMessage" [class.show]="toastVisible">
-        <div class="toast-content">
-          <h4>Notification</h4>
-          <p>{{ toastMessage }}</p>
-        </div>
-      </div>
+      <!-- Toast removed: now rendered globally via app-toast -->
 
       </div>
     </div>
@@ -258,6 +253,7 @@ import { AuthService } from '../services/auth.service';
 export class MyOrdersComponent implements OnInit {
   private orderService = inject(OrderService);
   private authService = inject(AuthService);
+  private toastService = inject(ToastService);
   private router = inject(Router);
 
   orders: any[] = [];
@@ -305,7 +301,7 @@ export class MyOrdersComponent implements OnInit {
       },
       error: () => {
         this.trackingOrder = null;
-        alert('Failed to fetch tracking details from Shiprocket.');
+        this.toastService.show('⚠️ Failed to fetch tracking details from Shiprocket.');
       }
     });
   }
@@ -322,9 +318,6 @@ export class MyOrdersComponent implements OnInit {
   selectedReturnOrder: any = null;
   returnReason: string = '';
   isSubmittingReturn = false;
-
-  toastMessage = '';
-  toastVisible = false;
 
   openReturnModal(order: any) {
     this.selectedReturnOrder = order;
@@ -352,22 +345,12 @@ export class MyOrdersComponent implements OnInit {
         this.closeReturnModal();
         this.isSubmittingReturn = false;
         
-        this.showToast(`✨ Return Authorized. Shipment ID: ${shipmentId} generated.`);
+        this.toastService.show('✨ Return Authorized. Shipment ID: ' + shipmentId + ' generated.');
       },
       error: (err) => {
         this.isSubmittingReturn = false;
-        alert('Failed to initiate return via Shiprocket. Please try again.');
+        this.toastService.show('⚠️ Failed to initiate return via Shiprocket. Please try again.');
       }
     });
-  }
-
-  showToast(message: string) {
-    this.toastMessage = message;
-    setTimeout(() => {
-      this.toastVisible = true;
-    }, 10);
-    setTimeout(() => {
-      this.toastVisible = false;
-    }, 4500); // Dissolves after 4.5s
   }
 }

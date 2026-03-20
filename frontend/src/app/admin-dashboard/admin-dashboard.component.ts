@@ -5,6 +5,7 @@ import { environment } from '../../environments/environment';
 import { FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
 import { AuthService } from '../services/auth.service';
+import { ToastService } from '../services/toast.service';
 
 @Component({
     selector: 'app-admin-dashboard',
@@ -230,6 +231,7 @@ export class AdminDashboardComponent implements OnInit {
 
     private http = inject(HttpClient);
     private authService = inject(AuthService);
+    private toastService = inject(ToastService);
     private router = inject(Router);
     private route = inject(ActivatedRoute);
 
@@ -277,7 +279,7 @@ export class AdminDashboardComponent implements OnInit {
                     this.calculateStats();
                 },
                 error: () => {
-                   alert('Failed to update status.');
+                   this.toastService.show('⚠️ Failed to update order status. Please try again.');
                 }
             });
     }
@@ -298,11 +300,11 @@ export class AdminDashboardComponent implements OnInit {
                     order.status = 'shipped';
                     order.syncing = false;
                     this.calculateStats();
-                    alert('Synced securely with Shiprocket Logistics.');
+                    this.toastService.show('✨ Synced securely with Shiprocket Logistics.');
                 },
                 error: () => {
                     order.syncing = false;
-                    alert('Shiprocket Sync Failed.');
+                    this.toastService.show('⚠️ Shiprocket Sync Failed. Please check the AWB code and try again.');
                 }
             });
     }
@@ -334,11 +336,11 @@ export class AdminDashboardComponent implements OnInit {
                 next: (res) => {
                     this.isSavingProduct = false;
                     this.closeModal();
-                    alert('Product saved successfully - Live in boutique!');
+                    this.toastService.show('✨ Product saved successfully — now live in boutique!');
                 },
                 error: (err) => {
                     this.isSavingProduct = false;
-                    alert('Failed to add product');
+                    this.toastService.show('⚠️ Failed to add product. Please check all fields and try again.');
                 }
             });
     }

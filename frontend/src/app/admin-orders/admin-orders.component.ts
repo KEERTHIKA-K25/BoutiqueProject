@@ -4,6 +4,7 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { environment } from '../../environments/environment';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
+import { ToastService } from '../services/toast.service';
 
 @Component({
   selector: 'app-admin-orders',
@@ -110,6 +111,7 @@ import { RouterLink } from '@angular/router';
 export class AdminOrdersComponent implements OnInit {
   orders: any[] = [];
   private http = inject(HttpClient);
+  private toastService = inject(ToastService);
 
   ngOnInit() {
     this.fetchOrders();
@@ -132,7 +134,7 @@ export class AdminOrdersComponent implements OnInit {
       .subscribe(() => {
         order.awb_code = order.new_awb;
         order.status = 'shipped';
-        alert('AWB Saved & Order Shipped');
+        this.toastService.show('✨ AWB Saved — Order marked as Shipped.');
       });
   }
 }
