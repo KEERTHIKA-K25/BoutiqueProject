@@ -67,4 +67,13 @@ export class AuthService {
         }
         return this.http.post(`${this.apiUrl}/verify-otp`, { otp }, { headers });
     }
+
+    resendOtp(): Observable<any> {
+        const token = typeof window !== 'undefined' ? localStorage.getItem('user_auth_token') : null;
+        let headers = new HttpHeaders();
+        if (token) {
+            headers = headers.set('Authorization', `Bearer ${token}`);
+        }
+        return this.http.post(`${this.apiUrl}/resend-otp`, {}, { headers });
+    }
 }

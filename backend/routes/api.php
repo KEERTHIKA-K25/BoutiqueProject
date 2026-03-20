@@ -40,6 +40,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
         // OTP
         Route::post('/verify-otp', [AuthController::class , 'verifyOtp']);
+        Route::post('/resend-otp', [AuthController::class , 'resendOtp']);
 
         // Admin
         Route::get('/admin/orders', [AdminController::class , 'index']);

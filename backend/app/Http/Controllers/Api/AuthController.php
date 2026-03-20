@@ -110,4 +110,28 @@ class AuthController extends Controller
 
         return response()->json(['message' => 'Invalid OTP'], 400);
     }
+
+    public function resendOtp(Request $request)
+    {
+        $user = $request->user();
+
+        if (!$user) {
+            return response()->json(['message' => 'Unauthorized'], 401);
+        }
+
+        // Already verified — no reason to resend
+        if ($user->otp_verified_at !== null) {
+            return response()->json(['message' => 'Your account is already verified.'], 400);
+        }
+
+        $regenerated = $this->authService->regenerateOtp($user);
+
+        if (!$regenerated) {
+            return response()->json([
+                'message' => 'Please wait 30 seconds before requesting a new code.'
+            ], 429);
+        }
+
+        return response()->json(['message' => 'A new verification code has been sent to your mobile.']);
+    }
 }
