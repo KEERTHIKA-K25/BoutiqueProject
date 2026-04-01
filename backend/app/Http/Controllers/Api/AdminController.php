@@ -32,7 +32,7 @@ class AdminController extends Controller
     public function updateStatus(Request $request, $id)
     {
         $request->validate([
-            'status' => 'required|in:pending,shipped,delivered'
+            'status' => 'required|in:pending,shipped,delivered,Return Requested,Returned & Refunded'
         ]);
         $order = Order::findOrFail($id);
         $order->status = $request->status;

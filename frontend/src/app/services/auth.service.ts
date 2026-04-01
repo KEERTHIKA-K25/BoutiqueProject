@@ -76,4 +76,12 @@ export class AuthService {
         }
         return this.http.post(`${this.apiUrl}/resend-otp`, {}, { headers });
     }
+
+    sendPasswordResetOtp(phone: string): Observable<any> {
+        return this.http.post(`${this.apiUrl}/forgot-password/send-otp`, { phone });
+    }
+
+    resetPassword(payload: any): Observable<any> {
+        return this.http.post(`${this.apiUrl}/forgot-password/reset`, payload);
+    }
 }

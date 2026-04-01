@@ -24,6 +24,11 @@ class User extends Authenticatable
         'password',
         'otp',
         'is_admin',
+        'otp_updated_at',   // OTP cooldown column (Task 1 fix)
+        'address',          // Saved delivery address
+        'city',
+        'state',
+        'pincode',
     ];
 
     /**

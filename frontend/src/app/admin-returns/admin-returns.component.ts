@@ -74,6 +74,9 @@ import { AuthService } from '../services/auth.service';
                     <span style="font-size: 10px; padding: 4px 8px; border-radius: 2px; text-transform: uppercase; font-weight: 600; border: 1px solid #153A36; color: #153A36; background: rgba(21, 58, 54, 0.05);" *ngIf="returnReq.status === 'Pending'">
                       {{ returnReq.status }}
                     </span>
+                    <span style="font-size: 10px; padding: 4px 8px; border-radius: 2px; text-transform: uppercase; font-weight: 600; border: 1px solid #D4AF37; color: #D4AF37; background: rgba(212, 175, 55, 0.08);" *ngIf="returnReq.status === 'Completed'">
+                      {{ returnReq.status }}
+                    </span>
                   </td>
 
                   <td style="padding: 15px; display: flex; gap: 10px;">

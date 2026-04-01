@@ -10,6 +10,7 @@ export const routes: Routes = [
     { path: 'my-orders', loadComponent: () => import('./my-orders/my-orders.component').then(c => c.MyOrdersComponent), canActivate: [authGuard] },
     { path: 'verify-otp', loadComponent: () => import('./verify-otp/verify-otp.component').then(c => c.VerifyOtpComponent) },
     { path: 'new-arrivals', loadComponent: () => import('./new-arrivals/new-arrivals.component').then(c => c.NewArrivalsComponent) },
+    { path: 'product/:id',  loadComponent: () => import('./product-detail/product-detail.component').then(c => c.ProductDetailComponent) },
     { path: 'admin/login', loadComponent: () => import('./admin-login/admin-login.component').then(c => c.AdminLoginComponent) },
     { path: 'admin/dashboard', loadComponent: () => import('./admin-dashboard/admin-dashboard.component').then(c => c.AdminDashboardComponent), canActivate: [adminGuard] },
     { path: 'admin/orders', redirectTo: 'admin/dashboard' },

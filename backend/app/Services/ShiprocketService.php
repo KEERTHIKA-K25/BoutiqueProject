@@ -30,33 +30,33 @@ class ShiprocketService
         $token = $this->authenticate();
 
         $orderData = [
-            'order_id' => 'ORD-' . $order->id . '-' . time(),
-            'order_date' => now()->format('Y-m-d H:i'),
-            'pickup_location' => 'home',
-            'billing_customer_name' => $user->name,
-            'billing_last_name' => 'Boutique', // Mandatory
-            'billing_address' => '123 Boutique St',
-            'billing_city' => 'New Delhi',
-            'billing_pincode' => '110001',
-            'billing_state' => 'Delhi',
-            'billing_country' => 'India',
-            'billing_email' => $user->email,
-            'billing_phone' => $user->phone ?? '9876543210',
-            'shipping_is_billing' => true,
-            'order_items' => [
+            'order_id'               => 'ORD-' . $order->id . '-' . time(),
+            'order_date'             => now()->format('Y-m-d H:i'),
+            'pickup_location'        => 'home',
+            'billing_customer_name'  => $order->shipping_name,
+            'billing_last_name'      => '',
+            'billing_address'        => $order->shipping_address,
+            'billing_city'           => $order->shipping_city,
+            'billing_pincode'        => $order->shipping_pincode,
+            'billing_state'          => $order->shipping_state,
+            'billing_country'        => 'India',
+            'billing_email'          => $user->email,
+            'billing_phone'          => $order->shipping_phone,
+            'shipping_is_billing'    => true,
+            'order_items'            => [
                 [
-                    'name' => 'Boutique Premium Item',
-                    'sku' => 'SKU-' . rand(100, 999),
-                    'units' => 1,
+                    'name'          => 'Boutique Premium Item',
+                    'sku'           => 'SKU-' . rand(100, 999),
+                    'units'         => 1,
                     'selling_price' => $order->total_amount,
                 ]
             ],
             'payment_method' => 'Prepaid',
-            'sub_total' => $order->total_amount,
-            'length' => 10,
-            'breadth' => 15,
-            'height' => 20,
-            'weight' => 0.5
+            'sub_total'      => $order->total_amount,
+            'length'         => 10,
+            'breadth'        => 15,
+            'height'         => 20,
+            'weight'         => 0.5
         ];
 
         $createResponse = Http::withToken($token)->post('https://apiv2.shiprocket.in/v1/external/orders/create/adhoc', $orderData);

@@ -134,4 +134,48 @@ class AuthController extends Controller
 
         return response()->json(['message' => 'A new verification code has been sent to your mobile.']);
     }
+
+    public function sendPasswordResetOtp(Request $request)
+    {
+        $request->validate(['phone' => 'required|string']);
+
+        $user = User::where('phone', $request->phone)->first();
+
+        if (!$user) {
+            return response()->json(['message' => 'No account found with this mobile number.'], 404);
+        }
+
+        $regenerated = $this->authService->regenerateOtp($user);
+
+        if (!$regenerated) {
+            return response()->json([
+                'message' => 'Please wait 30 seconds before requesting a new code.'
+            ], 429);
+        }
+
+        return response()->json(['message' => 'A password reset code has been sent to your mobile.']);
+    }
+
+    public function resetPassword(Request $request)
+    {
+        $request->validate([
+            'phone' => 'required|string',
+            'otp' => 'required|string',
+            'password' => 'required|string|min:8'
+        ]);
+
+        $user = User::where('phone', $request->phone)->first();
+
+        if (!$user) {
+            return response()->json(['message' => 'No account found.'], 404);
+        }
+
+        if ($this->authService->verifyUserOtp($user, $request->otp)) {
+            $user->password = Hash::make($request->password);
+            $user->save();
+            return response()->json(['message' => 'Password reset successfully.']);
+        }
+
+        return response()->json(['message' => 'Invalid or expired OTP.'], 400);
+    }
 }

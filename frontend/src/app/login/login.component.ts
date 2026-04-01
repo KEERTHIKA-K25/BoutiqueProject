@@ -3,6 +3,7 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { Router, RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { AuthService } from '../services/auth.service';
+import { ToastService } from '../services/toast.service';
 
 @Component({
   selector: 'app-login',
@@ -11,9 +12,10 @@ import { AuthService } from '../services/auth.service';
   template: `
     <div class="luxe-auth-wrapper">
       <div class="auth-card fade-in">
-        <h2 class="serif-title text-center">Welcome Back</h2>
+        <h2 class="serif-title text-center">{{ mode === 'login' ? 'Welcome Back' : 'Password Recovery' }}</h2>
         
-        <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" style="margin-top: 30px;">
+        <!-- LOGIN MODE -->
+        <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" style="margin-top: 30px;" *ngIf="mode === 'login'">
           <div class="form-group relative">
             <span class="input-icon">✉️</span>
             <input type="email" id="email" formControlName="email" class="auth-input" placeholder="Email Address" />
@@ -33,6 +35,10 @@ import { AuthService } from '../services/auth.service';
             </div>
           </div>
 
+          <div style="text-align: right; margin-top: 10px;">
+            <a href="javascript:void(0)" (click)="setMode('forgot_phone')" class="auth-gold-link" style="font-size: 11px; font-weight: 500;">Forgot Password?</a>
+          </div>
+
           <div class="error-text text-center" *ngIf="errorMessage" style="margin-top: 20px;">
             {{ errorMessage }}
           </div>
@@ -40,11 +46,73 @@ import { AuthService } from '../services/auth.service';
           <button type="submit" class="btn-auth-primary" [disabled]="loginForm.invalid || isLoading" style="margin-top: 30px;">
             {{ isLoading ? 'SIGNING IN...' : 'SIGN IN' }}
           </button>
+          
+          <p class="text-center" style="margin-top: 30px; font-size: 13px; color: #666;">
+            Don't have an account? <a routerLink="/register" class="auth-gold-link">Register here</a>
+          </p>
         </form>
 
-        <p class="text-center" style="margin-top: 30px; font-size: 13px; color: #666;">
-          Don't have an account? <a routerLink="/register" class="auth-gold-link">Register here</a>
-        </p>
+        <!-- FORGOT PASSWORD: ENTER PHONE MODE -->
+        <form [formGroup]="phoneForm" (ngSubmit)="onSendOtp()" style="margin-top: 30px;" *ngIf="mode === 'forgot_phone'">
+           <p style="font-size: 12px; color: #666; margin-bottom: 25px; text-align: center;">Enter your registered mobile number to receive a secure recovery code.</p>
+           
+           <div class="form-group relative">
+            <span class="input-icon">📱</span>
+            <input type="text" formControlName="phone" class="auth-input" placeholder="10-digit mobile number" maxlength="10" />
+           </div>
+
+           <div class="error-text text-center" *ngIf="errorMessage" style="margin-top: 20px;">
+             {{ errorMessage }}
+           </div>
+
+           <button type="submit" class="btn-auth-primary" [disabled]="phoneForm.invalid || isLoading" style="margin-top: 30px;">
+             {{ isLoading ? 'SENDING VERIFICATION...' : 'SEND SECURE CODE' }}
+           </button>
+
+           <p class="text-center" style="margin-top: 20px; font-size: 12px;">
+             <a href="javascript:void(0)" (click)="setMode('login')" class="auth-gold-link">← Back to Login</a>
+           </p>
+        </form>
+
+        <!-- FORGOT PASSWORD: RESET MODE -->
+        <form [formGroup]="resetForm" (ngSubmit)="onResetPassword()" style="margin-top: 30px;" *ngIf="mode === 'forgot_reset'">
+           <p style="font-size: 12px; color: #666; margin-bottom: 25px; text-align: center;">Enter the code sent to your mobile along with a secure new password.</p>
+           
+           <div class="form-group relative" style="margin-bottom: 15px;">
+            <span class="input-icon">🔑</span>
+            <input type="text" formControlName="otp" class="auth-input" placeholder="Enter OTP/Code" maxlength="6" />
+           </div>
+
+           <div class="form-group relative" style="margin-bottom: 15px;">
+            <span class="input-icon">🔒</span>
+            <input [type]="showPassword ? 'text' : 'password'" formControlName="password" class="auth-input" placeholder="New Password" />
+            <span class="password-toggle" (click)="showPassword = !showPassword">
+               {{ showPassword ? '🙈' : '👁️' }}
+            </span>
+           </div>
+
+           <div class="form-group relative">
+            <span class="input-icon">🔒</span>
+            <input [type]="showPassword ? 'text' : 'password'" formControlName="password_confirmation" class="auth-input" placeholder="Confirm Password" />
+           </div>
+
+           <div class="error-text text-center" *ngIf="resetForm.errors?.['mismatch']" style="margin-top: 10px;">
+             Passwords do not match.
+           </div>
+
+           <div class="error-text text-center" *ngIf="errorMessage" style="margin-top: 20px;">
+             {{ errorMessage }}
+           </div>
+
+           <button type="submit" class="btn-auth-primary" [disabled]="resetForm.invalid || isLoading" style="margin-top: 30px;">
+             {{ isLoading ? 'UPDATING...' : 'UPDATE PASSWORD' }}
+           </button>
+           
+           <p class="text-center" style="margin-top: 20px; font-size: 12px;">
+             <a href="javascript:void(0)" (click)="setMode('login')" class="auth-gold-link">Cancel</a>
+           </p>
+        </form>
+
       </div>
     </div>
   `,
@@ -155,18 +223,41 @@ import { AuthService } from '../services/auth.service';
   `]
 })
 export class LoginComponent {
+  mode: 'login' | 'forgot_phone' | 'forgot_reset' = 'login';
   showPassword = false;
+
   private fb = inject(FormBuilder);
   private authService = inject(AuthService);
   private router = inject(Router);
+  private toastService = inject(ToastService);
 
   loginForm: FormGroup = this.fb.group({
     email: ['', [Validators.required, Validators.email]],
     password: ['', Validators.required]
   });
 
+  phoneForm: FormGroup = this.fb.group({
+    phone: ['', [Validators.required, Validators.pattern('^[0-9]{10}$')]]
+  });
+
+  resetForm: FormGroup = this.fb.group({
+    otp: ['', [Validators.required, Validators.minLength(4)]],
+    password: ['', [Validators.required, Validators.minLength(8)]],
+    password_confirmation: ['', [Validators.required]]
+  }, { validators: this.passwordMatchValidator });
+
   isLoading = false;
   errorMessage = '';
+
+  passwordMatchValidator(g: FormGroup) {
+    return g.get('password')?.value === g.get('password_confirmation')?.value ? null : { mismatch: true };
+  }
+
+  setMode(m: 'login' | 'forgot_phone' | 'forgot_reset') {
+    this.mode = m;
+    this.errorMessage = '';
+    this.isLoading = false;
+  }
 
   onSubmit() {
     if (this.loginForm.valid) {
@@ -185,6 +276,52 @@ export class LoginComponent {
         error: (err) => {
           this.isLoading = false;
           this.errorMessage = err.error?.message || 'Login failed. Please check your credentials.';
+        }
+      });
+    }
+  }
+
+  onSendOtp() {
+    if (this.phoneForm.valid) {
+      this.isLoading = true;
+      this.errorMessage = '';
+
+      this.authService.sendPasswordResetOtp(this.phoneForm.value.phone).subscribe({
+        next: () => {
+          this.isLoading = false;
+          this.toastService.show('✨ Secure code dispatched via simulated Notification Gateway.');
+          this.setMode('forgot_reset');
+        },
+        error: (err) => {
+          this.isLoading = false;
+          this.errorMessage = err.error?.message || 'Failed to request code. Check phone number.';
+        }
+      });
+    }
+  }
+
+  onResetPassword() {
+    if (this.resetForm.valid) {
+      this.isLoading = true;
+      this.errorMessage = '';
+      
+      const payload = {
+        phone: this.phoneForm.value.phone,
+        otp: this.resetForm.value.otp,
+        password: this.resetForm.value.password,
+        password_confirmation: this.resetForm.value.password_confirmation
+      };
+
+      this.authService.resetPassword(payload).subscribe({
+        next: () => {
+          this.isLoading = false;
+          this.toastService.show('✨ Password successfully reset! Please sign in.');
+          this.setMode('login');
+          this.resetForm.reset();
+        },
+        error: (err) => {
+          this.isLoading = false;
+          this.errorMessage = err.error?.message || 'Invalid or expired OTP code.';
         }
       });
     }

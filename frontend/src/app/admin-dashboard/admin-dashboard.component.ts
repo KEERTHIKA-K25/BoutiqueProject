@@ -59,8 +59,11 @@ import { ToastService } from '../services/toast.service';
               <div class="stat-value">{{ syncedCount }}</div>
             </div>
             <div class="stat-card">
-              <span class="stat-label">Revenue</span>
+              <span class="stat-label">Net Revenue</span>
               <div class="stat-value" style="font-family: 'Playfair Display', serif;">₹{{ totalRevenue }}</div>
+              <div *ngIf="refundedAmount > 0" style="font-size: 11px; color: #B42828; margin-top: 6px; font-weight: 500;">
+                - ₹{{ refundedAmount }} Refunded
+              </div>
             </div>
         </div>
 
@@ -88,10 +91,12 @@ import { ToastService } from '../services/toast.service';
                   
                   <td style="padding: 20px 30px;">
                     <select [(ngModel)]="order.status" (change)="saveStatus(order)" style="padding: 6px 12px; border: 1px solid #DEDEDE; border-radius: 2px; font-family: 'Montserrat', sans-serif; font-size: 11px; background: white; outline: none; cursor: pointer; text-transform: uppercase;"
-                            [disabled]="order.status === 'delivered'">
+                            [disabled]="order.status === 'Returned & Refunded'">
                       <option value="pending" [disabled]="order.status === 'shipped' || order.status === 'delivered'">Pending</option>
                       <option value="shipped">Shipped</option>
                       <option value="delivered">Delivered</option>
+                      <option value="Return Requested">Return Requested</option>
+                      <option value="Returned & Refunded">Returned &amp; Refunded</option>
                     </select>
                   </td>
 
@@ -219,6 +224,7 @@ export class AdminDashboardComponent implements OnInit {
     pendingCount = 0;
     syncedCount = 0;
     totalRevenue = 0;
+    refundedAmount = 0;
 
     showInventoryModal = false;
     isSavingProduct = false;
@@ -265,7 +271,16 @@ export class AdminDashboardComponent implements OnInit {
     calculateStats() {
         this.pendingCount = this.orders.filter(o => o.status === 'pending').length;
         this.syncedCount = this.orders.filter(o => o.awb_code).length;
-        this.totalRevenue = this.orders.reduce((sum, current) => sum + parseFloat(current.total_amount || 0), 0);
+        
+        // Net Revenue (EXCLUDES refunded orders)
+        this.totalRevenue = this.orders
+            .filter(o => o.status !== 'Returned & Refunded')
+            .reduce((sum, current) => sum + parseFloat(current.total_amount || 0), 0);
+            
+        // Total Refunded Amount
+        this.refundedAmount = this.orders
+            .filter(o => o.status === 'Returned & Refunded')
+            .reduce((sum, current) => sum + parseFloat(current.total_amount || 0), 0);
     }
 
     saveStatus(order: any) {

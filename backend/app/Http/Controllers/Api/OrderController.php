@@ -18,37 +18,64 @@ class OrderController extends Controller
 
     public function store(Request $request)
     {
-        $request->validate([
-            'product_id' => 'required|exists:products,id'
+        $validatedData = $request->validate([
+            'product_id'           => 'required|exists:products,id',
+            'shipping_address'     => 'required|string|max:255',
+            'shipping_city'        => 'required|string|max:100',
+            'shipping_state'       => 'required|string|max:100',
+            'shipping_pincode'     => 'required|digits:6',
+            'selected_size'        => 'nullable|string|in:XS,S,M,L,XL,XXL,Custom',
+            'custom_measurements'  => 'nullable|string|max:500',
         ]);
 
+        $user = $request->user();
+
+        // Auto-fill name and phone from authenticated user — never from form
+        $shippingName  = $user->name;
+        $shippingPhone = $user->phone;
+
         $order = $this->orderService->createPendingOrder(
-            $request->user()->id,
-            $request->product_id
+            $user->id,
+            $validatedData['product_id'],
+            [
+                'shipping_name'       => $shippingName,
+                'shipping_phone'      => $shippingPhone,
+                'shipping_address'    => $validatedData['shipping_address'],
+                'shipping_city'       => $validatedData['shipping_city'],
+                'shipping_state'      => $validatedData['shipping_state'],
+                'shipping_pincode'    => $validatedData['shipping_pincode'],
+                'selected_size'       => $validatedData['selected_size'] ?? null,
+                'custom_measurements' => $validatedData['custom_measurements'] ?? null,
+            ]
         );
 
+        // Save / update address in users table for future reuse
+        $user->update([
+            'address' => $validatedData['shipping_address'],
+            'city'    => $validatedData['shipping_city'],
+            'state'   => $validatedData['shipping_state'],
+            'pincode' => $validatedData['shipping_pincode'],
+        ]);
+
         try {
-            // Trigger Shiprocket Integration Internally via Service Layer
             $shipmentData = $this->shiprocketService->createAdhocShipment($order);
 
             $order = $order->fresh();
 
-            // Trigger Notification (Mock WhatsApp/SMS)
             $notificationService = new \App\Services\NotificationService();
             $notificationService->sendOrderNotification($order);
 
             return response()->json([
-                'message' => 'Order placed successfully!',
+                'message'             => 'Order placed successfully!',
                 'shiprocket_order_id' => $shipmentData['shiprocket_order_id'] ?? null,
-                'order' => $order
+                'order'               => $order
             ], 201);
-        }
-        catch (\Exception $e) {
+        } catch (\Exception $e) {
             Log::error('Shiprocket Error: ' . $e->getMessage());
             return response()->json([
                 'message' => 'Order saved but shipping failed to initialize.',
-                'error' => $e->getMessage(),
-                'order' => $order
+                'error'   => $e->getMessage(),
+                'order'   => $order
             ], 500);
         }
     }

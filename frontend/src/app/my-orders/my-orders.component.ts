@@ -2,7 +2,7 @@ import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
-import { OrderService } from '../services/order.service';
+import { OrderService, AddressPayload } from '../services/order.service';
 import { AuthService } from '../services/auth.service';
 import { ToastService } from '../services/toast.service';
 
@@ -39,6 +39,7 @@ import { ToastService } from '../services/toast.service';
           <thead>
             <tr style="border-bottom: 2px solid #EBEBEB;">
               <th style="padding: 15px; font-size: 12px; font-weight: 600; text-transform: uppercase; color: var(--secondary-color);">S.NO</th>
+              <th style="padding: 15px; font-size: 12px; font-weight: 600; text-transform: uppercase; color: var(--secondary-color);">Product</th>
               <th style="padding: 15px; font-size: 12px; font-weight: 600; text-transform: uppercase; color: var(--secondary-color);">Date</th>
               <th style="padding: 15px; font-size: 12px; font-weight: 600; text-transform: uppercase; color: var(--secondary-color);">Total</th>
               <th style="padding: 15px; font-size: 12px; font-weight: 600; text-transform: uppercase; color: var(--secondary-color);">Status</th>
@@ -49,6 +50,11 @@ import { ToastService } from '../services/toast.service';
             <ng-container *ngFor="let order of orders; let i = index">
               <tr style="transition: background-color 0.3s ease;" [style.border-bottom]="trackingActivities[order.id] ? 'none' : '1px solid #F0F0F0'" [style.background-color]="trackingActivities[order.id] ? '#fcfcfc' : 'transparent'">
                 <td style="padding: 15px; font-weight: 500; font-size: 13px; color: var(--secondary-color);">#{{ i + 1 }}</td>
+                <td style="padding: 15px; font-size: 13px; max-width: 200px;">
+                  <span style="font-family: 'Playfair Display', serif; font-size: 13px; color: #153A36; display: block;">
+                    {{ order.product?.name || '—' }}
+                  </span>
+                </td>
                 <td style="padding: 15px; font-size: 13px;">{{ order.created_at | date:'mediumDate' }}</td>
                 <td style="padding: 15px; font-size: 13px; font-weight: 500;">₹{{ order.total_amount }}</td>
                 <td style="padding: 15px; font-size: 13px;">{{ order.status | titlecase }}</td>
@@ -63,10 +69,12 @@ import { ToastService } from '../services/toast.service';
                         PROCESSING
                       </button>
                       
-                      <!-- Return Ghost Button -->
-                      <button *ngIf="order.status !== 'Return Requested'" class="btn-ghost" style="padding: 6px 12px; font-size: 11px; width: auto; margin-top: 5px; border: 1px solid var(--secondary-color); color: var(--secondary-color); background: transparent;" (click)="openReturnModal(order)">
-                        RETURN ITEM
-                      </button>
+                      <!-- Return Ghost Button — only on delivered orders -->
+                      @if (order.status === 'delivered') {
+                        <button class="btn-ghost" style="padding: 6px 12px; font-size: 11px; width: auto; margin-top: 5px; border: 1px solid var(--secondary-color); color: var(--secondary-color); background: transparent;" (click)="openReturnModal(order)">
+                          RETURN ITEM
+                        </button>
+                      }
                       
                       <!-- Return Status Details -->
                       <span *ngIf="order.status === 'Return Requested' && order.shipment_id" style="font-size: 11px; color: #555; display: block; margin-top: 5px; font-weight: 500;">
@@ -74,28 +82,33 @@ import { ToastService } from '../services/toast.service';
                       </span>
                   </div>
                   
-                  <!-- Floating Overlay Card -->
-                  <div class="tracking-overlay-card" *ngIf="trackingActivities[order.id]">
-                    <!-- Close 'X' Button -->
-                    <button class="close-btn" (click)="trackOrder(order)">&times;</button>
+                  <!-- Tracking Modal Overlay -->
+                  <div class="modal-overlay" *ngIf="trackingActivities[order.id]" (click)="trackOrder(order)" style="z-index: 3000;">
+                    <div class="tracking-overlay-card" (click)="$event.stopPropagation()">
+                      <!-- Close 'X' Button -->
+                      <button class="close-btn" (click)="trackOrder(order)">&times;</button>
 
-                    <!-- Centered Timeline -->
-                    <div style="width: 100%;">
-                      <h4 style="font-family: 'Playfair Display', serif; font-size: 16px; margin: 0 0 20px 0; color: #153A36; letter-spacing: 0.5px; border-bottom: 1px solid rgba(0,0,0,0.05); padding-bottom: 12px; text-align: center;">Order Journey</h4>
-                      
-                      <div *ngIf="trackingActivities[order.id].length === 0" style="font-size: 13px; color: #999; font-style: italic; text-align: center;">
-                        Awaiting courier intercept...
-                      </div>
-                      
-                      <div class="tracking-timeline" *ngIf="trackingActivities[order.id].length > 0" style="margin: 15px auto 0 auto; max-width: 300px;">
-                        <!-- The [class.active]="i === 0" guarantees only the top node pulses -->
-                        <div class="tracking-node" *ngFor="let activity of trackingActivities[order.id]; let i = index" [class.active]="i === 0">
-                            <div [style.color]="i === 0 ? '#153A36' : '#555'" style="font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 600; margin-bottom: 2px;">
-                              {{ activity.activity }}
-                            </div>
-                            <div style="font-family: 'Inter', sans-serif; font-size: 11px; color: #888;">
-                                {{ activity.location }} <br/> {{ activity.date | date:'dd MMM, h:mm a' }}
-                            </div>
+                      <!-- Centered Timeline -->
+                      <div style="width: 100%;">
+                        <h4 style="font-family: 'Playfair Display', serif; font-size: 16px; margin: 0 0 20px 0; color: #153A36; letter-spacing: 0.5px; border-bottom: 1px solid rgba(0,0,0,0.05); padding-bottom: 12px; text-align: center;">Order Journey</h4>
+                        
+                        <div *ngIf="trackingActivities[order.id].length === 0" style="font-size: 13px; color: #999; font-style: italic; text-align: center;">
+                          Awaiting courier intercept...
+                        </div>
+                        
+                        <div class="tracking-timeline" *ngIf="trackingActivities[order.id].length > 0" style="margin: 15px auto 0 auto; max-width: 300px;">
+                          <!-- Real DOM Timeline Line -->
+                          <div class="timeline-line"></div>
+                          
+                          <!-- The [class.active]="i === 0" guarantees only the top node pulses -->
+                          <div class="tracking-node" *ngFor="let activity of trackingActivities[order.id]; let i = index" [class.active]="i === 0">
+                              <div [style.color]="i === 0 ? '#D4AF37' : '#444'" style="font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 600; margin-bottom: 2px;">
+                                {{ activity.activity }}
+                              </div>
+                              <div style="font-family: 'Inter', sans-serif; font-size: 11px; color: #888;">
+                                  {{ activity.location }} <br/> {{ activity.date | date:'dd MMM, h:mm a' }}
+                              </div>
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -141,10 +154,56 @@ import { ToastService } from '../services/toast.service';
         </div>
       </div>
 
-      <!-- Toast removed: now rendered globally via app-toast -->
-
+      <!-- ===== MY SAVED ADDRESS SECTION ===== -->
       </div>
     </div>
+
+
+  <div class="addr-section-wrapper">
+    <div class="addr-card">
+
+      <div class="addr-card-header">
+        <h2 class="addr-title">📍 My Saved Address</h2>
+        <p class="addr-subtitle">Saved securely · Used for all future orders</p>
+      </div>
+
+      <!-- Street Address — full width -->
+      <div class="addr-field-group">
+        <label class="addr-label">Street Address</label>
+        <input type="text" class="addr-input" placeholder="House No, Street, Area"
+               [(ngModel)]="addrForm.shipping_address" maxlength="255" />
+      </div>
+
+      <!-- City + State — 50/50 -->
+      <div class="addr-two-col">
+        <div class="addr-field-group">
+          <label class="addr-label">City</label>
+          <input type="text" class="addr-input" placeholder="City"
+                 [(ngModel)]="addrForm.shipping_city" maxlength="100" />
+        </div>
+        <div class="addr-field-group">
+          <label class="addr-label">State</label>
+          <input type="text" class="addr-input" placeholder="State"
+                 [(ngModel)]="addrForm.shipping_state" maxlength="100" />
+        </div>
+      </div>
+
+      <!-- Pincode — full width -->
+      <div class="addr-field-group">
+        <label class="addr-label">Pincode</label>
+        <input type="text" class="addr-input" placeholder="6-digit pincode"
+               [(ngModel)]="addrForm.shipping_pincode"
+               maxlength="6" pattern="[0-9]{6}" />
+      </div>
+
+      <button class="btn-update-addr"
+              [disabled]="isUpdatingAddress || !isAddressFormValid()"
+              (click)="saveAddress()">
+        {{ isUpdatingAddress ? 'SAVING...' : 'UPDATE ADDRESS' }}
+      </button>
+
+    </div>
+  </div>
   `,
   styles: [`
     /* Modal & Loaders */
@@ -164,12 +223,10 @@ import { ToastService } from '../services/toast.service';
     }
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    /* The Absolute Floating Overlay Card */
+    /* Tracking Modal Card */
     .tracking-overlay-card {
-        position: absolute;
-        top: 100%; /* Spawns exactly at the bottom border of the Action cell */
-        right: 0px; /* Aligns to the right edge of the cell */
-        z-index: 1000; /* Forces it to hover over all other rows */
+        position: relative; /* Changed from absolute to relative to stack in modal center */
+        z-index: 3001; 
         
         width: 380px;
         background: rgba(255, 255, 255, 0.85); 
@@ -208,45 +265,162 @@ import { ToastService } from '../services/toast.service';
         0% { opacity: 0; transform: translateY(-10px) scale(0.95); }
         100% { opacity: 1; transform: translateY(0) scale(1); }
     }
-    /* The Vertical Track Line */
+    /* The Vertical Track Line Container */
     .tracking-timeline {
         position: relative;
         padding-left: 0;
         margin-left: 10px;
         margin-top: 15px;
-        border-left: 2px solid #EBEBEB; 
     }
 
-    /* Individual Status Node */
+    /* Connecting Vertical Line (Real DOM element) */
+    .timeline-line {
+        position: absolute;
+        top: 8px; /* Starts exactly at center of first active dot */
+        height: calc(100% - 32px); /* Forces explicit dimension */
+        left: 5px; /* Center-align line (x=5 to 7px, center at 6px) */
+        width: 2px;
+        background: #DDD;
+    }
+
+    /* Individual Status Node Layout */
     .tracking-node {
         position: relative;
-        margin-bottom: 25px;
-        padding-left: 25px;
+        margin-bottom: 24px;
+        padding-left: 28px;
+        z-index: 2; /* Keep above line */
     }
 
-    /* The Solid Teal Circle */
+    /* Older Event Dot (Grey, 10px visual size with borders) */
     .tracking-node::before {
         content: '';
         position: absolute;
-        left: -8px; /* Centers perfectly on the 2px border */
-        top: 3px;
-        width: 14px;
-        height: 14px;
+        left: 0px; /* dot width+borders = 12px. spans 0 to 12. Center = 6px */
+        top: 4px;
+        width: 8px;
+        height: 8px;
         border-radius: 50%;
-        background-color: #153A36; /* Transformative Teal */
+        background-color: #555; 
         border: 2px solid white;
-        box-sizing: border-box;
+        box-sizing: content-box;
+        z-index: 2;
     }
 
-    /* The Pulse Routine for the Latest Status */
+    /* Latest Event Dot (Gold, 16px visual size with borders) */
     .tracking-node.active::before {
-        animation: pulse-ring 1.5s infinite cubic-bezier(0.25, 0.8, 0.25, 1);
+        left: -2px; /* dot width+borders = 16px. spans -2 to 14. Center = 6px */
+        top: 2px;
+        width: 12px;
+        height: 12px;
+        background-color: #D4AF37; 
+        border: 2px solid white;
+        animation: pulse-gold 1.5s infinite cubic-bezier(0.25, 0.8, 0.25, 1);
     }
 
-    @keyframes pulse-ring {
-        0% { box-shadow: 0 0 0 0 rgba(21, 58, 54, 0.5); }
-        70% { box-shadow: 0 0 0 8px rgba(21, 58, 54, 0); }
-        100% { box-shadow: 0 0 0 0 rgba(21, 58, 54, 0); }
+    @keyframes pulse-gold {
+        0% { box-shadow: 0 0 0 0 rgba(212, 175, 55, 0.6); }
+        70% { box-shadow: 0 0 0 8px rgba(212, 175, 55, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(212, 175, 55, 0); }
+    }
+    /* ===== MY SAVED ADDRESS SECTION ===== */
+    :host {
+      display: block;
+      width: 100%;
+    }
+    .addr-section-wrapper {
+      width: 100%;
+      box-sizing: border-box;
+      background: radial-gradient(circle at 60% 40%, #FBFBF9, #EADDD7);
+      padding: 60px 20px 80px 20px;
+    }
+    .addr-card {
+      display: block;
+      background: white;
+      width: 100%;
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 44px 40px;
+      border-top: 2px solid #D4AF37;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.06);
+      box-sizing: border-box;
+    }
+    .addr-card-header {
+      margin-bottom: 32px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid #EBEBEB;
+    }
+    .addr-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 28px;
+      font-weight: 500;
+      color: #153A36;
+      margin: 0 0 8px 0;
+      letter-spacing: 0.02em;
+    }
+    .addr-subtitle {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 12px;
+      font-style: italic;
+      color: #999;
+      margin: 0;
+      letter-spacing: 0.3px;
+    }
+    .addr-field-group { margin-bottom: 22px; }
+    .addr-two-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+    .addr-label {
+      display: block;
+      font-family: 'Montserrat', sans-serif;
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 1.2px;
+      text-transform: uppercase;
+      color: #888;
+      margin-bottom: 8px;
+    }
+    .addr-input {
+      width: 100%;
+      padding: 10px 0;
+      border: none;
+      border-bottom: 1px solid #DDD;
+      background: transparent;
+      font-family: 'Montserrat', sans-serif;
+      font-size: 13px;
+      color: #222;
+      box-sizing: border-box;
+      outline: none;
+      transition: border-color 0.25s ease;
+    }
+    .addr-input:focus {
+      border-bottom: 2px solid #D4AF37;
+    }
+    .addr-input::placeholder { color: #BBBBBB; }
+    .btn-update-addr {
+      width: 100%;
+      margin-top: 12px;
+      padding: 15px;
+      background: #2C2C2C;
+      color: #D4AF37;
+      border: none;
+      font-family: 'Montserrat', sans-serif;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 2.5px;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: background 0.2s ease, transform 0.2s ease;
+    }
+    .btn-update-addr:hover:not(:disabled) {
+      background: #1a1a1a;
+      transform: translateY(-1px);
+    }
+    .btn-update-addr:disabled {
+      background: #E0E0E0;
+      color: #A0A0A0;
+      cursor: not-allowed;
     }
   `]
 })
@@ -261,8 +435,18 @@ export class MyOrdersComponent implements OnInit {
   trackingOrder: number | null = null;
   trackingActivities: { [key: number]: any[] } = {};
 
+  // My Saved Address
+  addrForm: AddressPayload = {
+    shipping_address: '',
+    shipping_city:    '',
+    shipping_state:   '',
+    shipping_pincode: ''
+  };
+  isUpdatingAddress = false;
+
   ngOnInit() {
     this.fetchOrders();
+    this.loadSavedAddress();
   }
 
   fetchOrders() {
@@ -275,6 +459,45 @@ export class MyOrdersComponent implements OnInit {
       }
     });
   }
+
+  loadSavedAddress() {
+    this.orderService.getUserAddress().subscribe({
+      next: (addr) => {
+        this.addrForm = {
+          shipping_address: addr.address || '',
+          shipping_city:    addr.city    || '',
+          shipping_state:   addr.state   || '',
+          shipping_pincode: addr.pincode || ''
+        };
+      },
+      error: () => {} // Silently ignore — address section stays blank
+    });
+  }
+
+  isAddressFormValid(): boolean {
+    return !!(
+      this.addrForm.shipping_address.trim() &&
+      this.addrForm.shipping_city.trim() &&
+      this.addrForm.shipping_state.trim() &&
+      /^[0-9]{6}$/.test(this.addrForm.shipping_pincode)
+    );
+  }
+
+  saveAddress() {
+    if (!this.isAddressFormValid()) return;
+    this.isUpdatingAddress = true;
+    this.orderService.updateUserAddress(this.addrForm).subscribe({
+      next: () => {
+        this.isUpdatingAddress = false;
+        this.toastService.show('✨ Address updated successfully.');
+      },
+      error: () => {
+        this.isUpdatingAddress = false;
+        this.toastService.show('⚠️ Failed to update address. Please try again.');
+      }
+    });
+  }
+
 
   trackOrder(order: any) {
     if (this.trackingActivities[order.id]) {

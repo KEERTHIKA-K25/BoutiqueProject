@@ -7,16 +7,19 @@ use Illuminate\Support\Facades\Route;
 
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\ShiprocketController;
-
-Route::post('/register', [AuthController::class , 'register']);
-Route::post('/login', [AuthController::class , 'login']);
-Route::post('/admin/login', [AuthController::class , 'adminLogin']);
-
 use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\AdminController;
+use App\Http\Controllers\Api\UserController;
 
-Route::get('/products', [ProductController::class, 'index']);
+// Public routes — no authentication required
+Route::post('/register',    [AuthController::class, 'register']);
+Route::post('/login',       [AuthController::class, 'login']);
+Route::post('/admin/login', [AuthController::class, 'adminLogin']);
+Route::post('/forgot-password/send-otp', [AuthController::class, 'sendPasswordResetOtp']);
+Route::post('/forgot-password/reset',    [AuthController::class, 'resetPassword']);
+Route::get('/products',      [ProductController::class, 'index']);
+Route::get('/products/{id}', [ProductController::class, 'show']);
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/user', function (Request $request) {
@@ -41,6 +44,10 @@ Route::middleware('auth:sanctum')->group(function () {
         // OTP
         Route::post('/verify-otp', [AuthController::class , 'verifyOtp']);
         Route::post('/resend-otp', [AuthController::class , 'resendOtp']);
+
+        // User address
+        Route::get('/user/address', [UserController::class, 'getAddress']);
+        Route::put('/user/address', [UserController::class, 'updateAddress']);
 
         // Admin
         Route::get('/admin/orders', [AdminController::class , 'index']);
