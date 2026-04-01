@@ -17,7 +17,7 @@ import { ToastService } from '../services/toast.service';
         <!-- LOGIN MODE -->
         <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" style="margin-top: 30px;" *ngIf="mode === 'login'">
           <div class="form-group relative">
-            <span class="input-icon">✉️</span>
+            <!-- <span class="input-icon">✉️</span> -->
             <input type="email" id="email" formControlName="email" class="auth-input" placeholder="Email Address" />
             <div class="error-text" *ngIf="loginForm.get('email')?.invalid && loginForm.get('email')?.touched">
               Please enter a valid email.
@@ -25,7 +25,7 @@ import { ToastService } from '../services/toast.service';
           </div>
 
           <div class="form-group relative" style="margin-top: 20px;">
-            <span class="input-icon">🔒</span>
+            <!-- <span class="input-icon">🔒</span> -->
             <input [type]="showPassword ? 'text' : 'password'" id="password" formControlName="password" class="auth-input" placeholder="Password" />
             <span class="password-toggle" (click)="showPassword = !showPassword">
                {{ showPassword ? '🙈' : '👁️' }}
@@ -57,7 +57,7 @@ import { ToastService } from '../services/toast.service';
            <p style="font-size: 12px; color: #666; margin-bottom: 25px; text-align: center;">Enter your registered mobile number to receive a secure recovery code.</p>
            
            <div class="form-group relative">
-            <span class="input-icon">📱</span>
+            <!-- <span class="input-icon">📱</span> -->
             <input type="text" formControlName="phone" class="auth-input" placeholder="10-digit mobile number" maxlength="10" />
            </div>
 
@@ -79,12 +79,12 @@ import { ToastService } from '../services/toast.service';
            <p style="font-size: 12px; color: #666; margin-bottom: 25px; text-align: center;">Enter the code sent to your mobile along with a secure new password.</p>
            
            <div class="form-group relative" style="margin-bottom: 15px;">
-            <span class="input-icon">🔑</span>
+            <!-- <span class="input-icon">🔑</span> -->
             <input type="text" formControlName="otp" class="auth-input" placeholder="Enter OTP/Code" maxlength="6" />
            </div>
 
            <div class="form-group relative" style="margin-bottom: 15px;">
-            <span class="input-icon">🔒</span>
+            <!-- <span class="input-icon">🔒</span> -->
             <input [type]="showPassword ? 'text' : 'password'" formControlName="password" class="auth-input" placeholder="New Password" />
             <span class="password-toggle" (click)="showPassword = !showPassword">
                {{ showPassword ? '🙈' : '👁️' }}
@@ -92,7 +92,7 @@ import { ToastService } from '../services/toast.service';
            </div>
 
            <div class="form-group relative">
-            <span class="input-icon">🔒</span>
+            <!-- <span class="input-icon">🔒</span> -->
             <input [type]="showPassword ? 'text' : 'password'" formControlName="password_confirmation" class="auth-input" placeholder="Confirm Password" />
            </div>
 
@@ -289,7 +289,7 @@ export class LoginComponent {
       this.authService.sendPasswordResetOtp(this.phoneForm.value.phone).subscribe({
         next: () => {
           this.isLoading = false;
-          this.toastService.show('✨ Secure code dispatched via simulated Notification Gateway.');
+          this.toastService.show('✨ OTP sent successfully');
           this.setMode('forgot_reset');
         },
         error: (err) => {
@@ -304,7 +304,7 @@ export class LoginComponent {
     if (this.resetForm.valid) {
       this.isLoading = true;
       this.errorMessage = '';
-      
+
       const payload = {
         phone: this.phoneForm.value.phone,
         otp: this.resetForm.value.otp,

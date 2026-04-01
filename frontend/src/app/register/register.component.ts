@@ -15,7 +15,7 @@ import { AuthService } from '../services/auth.service';
         
         <form [formGroup]="registerForm" (ngSubmit)="onSubmit()" style="margin-top: 30px;">
           <div class="form-group relative">
-            <span class="input-icon">👤</span>
+            <!-- <span class="input-icon">👤</span> -->
             <input type="text" id="name" formControlName="name" class="auth-input" placeholder="Full Name" />
             <div class="error-text" *ngIf="registerForm.get('name')?.invalid && registerForm.get('name')?.touched">
               Name is required.
@@ -23,7 +23,7 @@ import { AuthService } from '../services/auth.service';
           </div>
 
           <div class="form-group relative" style="margin-top: 15px;">
-            <span class="input-icon">✉️</span>
+            <!-- <span class="input-icon">✉️</span> -->
             <input type="email" id="email" formControlName="email" class="auth-input" placeholder="Email Address" />
             <div class="error-text" *ngIf="registerForm.get('email')?.invalid && registerForm.get('email')?.touched">
               Please enter a valid email.
@@ -39,7 +39,7 @@ import { AuthService } from '../services/auth.service';
           </div>
 
           <div class="form-group relative" style="margin-top: 15px;">
-            <span class="input-icon">🔒</span>
+            <!-- <span class="input-icon">🔒</span> -->
             <input [type]="showPassword ? 'text' : 'password'" id="password" formControlName="password" class="auth-input" placeholder="Create Password" />
             <span class="password-toggle" (click)="showPassword = !showPassword">
                {{ showPassword ? '🙈' : '👁️' }}
@@ -50,7 +50,7 @@ import { AuthService } from '../services/auth.service';
           </div>
 
           <div class="form-group relative" style="margin-top: 15px;">
-            <span class="input-icon">🔒</span>
+            <!-- <span class="input-icon">🔒</span> -->
             <input [type]="showConfirmPassword ? 'text' : 'password'" id="password_confirmation" formControlName="password_confirmation" class="auth-input" placeholder="Confirm Password" />
             <span class="password-toggle" (click)="showConfirmPassword = !showConfirmPassword">
                {{ showConfirmPassword ? '🙈' : '👁️' }}

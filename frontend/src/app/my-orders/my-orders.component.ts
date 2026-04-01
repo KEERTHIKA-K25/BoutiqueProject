@@ -163,7 +163,7 @@ import { ToastService } from '../services/toast.service';
     <div class="addr-card">
 
       <div class="addr-card-header">
-        <h2 class="addr-title">📍 My Saved Address</h2>
+        <h2 class="addr-title">My Saved Address</h2>
         <p class="addr-subtitle">Saved securely · Used for all future orders</p>
       </div>
 
@@ -438,8 +438,8 @@ export class MyOrdersComponent implements OnInit {
   // My Saved Address
   addrForm: AddressPayload = {
     shipping_address: '',
-    shipping_city:    '',
-    shipping_state:   '',
+    shipping_city: '',
+    shipping_state: '',
     shipping_pincode: ''
   };
   isUpdatingAddress = false;
@@ -465,12 +465,12 @@ export class MyOrdersComponent implements OnInit {
       next: (addr) => {
         this.addrForm = {
           shipping_address: addr.address || '',
-          shipping_city:    addr.city    || '',
-          shipping_state:   addr.state   || '',
+          shipping_city: addr.city || '',
+          shipping_state: addr.state || '',
           shipping_pincode: addr.pincode || ''
         };
       },
-      error: () => {} // Silently ignore — address section stays blank
+      error: () => { } // Silently ignore — address section stays blank
     });
   }
 
@@ -560,14 +560,14 @@ export class MyOrdersComponent implements OnInit {
     this.orderService.returnOrder(this.selectedReturnOrder.id, this.returnReason).subscribe({
       next: (res) => {
         const shipmentId = res.shipment_id || 'Pending';
-        
+
         // Two-way binding reflection instantly
         this.selectedReturnOrder.status = 'Return Requested';
         this.selectedReturnOrder.shipment_id = shipmentId;
-        
+
         this.closeReturnModal();
         this.isSubmittingReturn = false;
-        
+
         this.toastService.show('✨ Return Authorized. Shipment ID: ' + shipmentId + ' generated.');
       },
       error: (err) => {

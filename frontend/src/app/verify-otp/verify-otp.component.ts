@@ -21,7 +21,7 @@ import { AuthService } from '../services/auth.service';
         <div style="margin-top: 30px;">
 
           <div class="form-group relative">
-            <span class="input-icon" style="top: 15px; left: 20px; font-size: 16px;">📱</span>
+            <!-- <span class="input-icon" style="top: 15px; left: 20px; font-size: 16px;">📱</span> -->
             <input type="text" [(ngModel)]="otpCode" class="auth-input otp-vault-input"
                    placeholder="Enter 6-digit code" maxlength="6" />
           </div>
